@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Search, Loader2, Sparkles, BookOpen, Database, BrainCircuit, ArrowRight, LogOut } from "lucide-react";
+import Link from "next/link";
+import { Search, Loader2, Sparkles, BookOpen, Database, BrainCircuit, ArrowRight, LogOut, Download, DollarSign } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 
 export default function Home() {
@@ -21,6 +22,18 @@ export default function Home() {
       endOfReportRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [report]);
+
+  const downloadReport = () => {
+    const blob = new Blob([report], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "research_report.md";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,15 +87,20 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#09090b] text-zinc-50 flex flex-col items-center p-6 sm:p-12 md:p-24 selection:bg-blue-500/30">
       
-      {/* Sign Out Button */}
+      {/* Navigation */}
       {session && (
-        <button
-          onClick={() => signOut()}
-          className="absolute top-6 right-6 flex items-center space-x-2 text-zinc-400 hover:text-zinc-100 transition-colors"
-        >
-          <LogOut className="w-5 h-5" />
-          <span className="text-sm font-medium">Sign Out</span>
-        </button>
+        <div className="absolute top-6 right-6 flex items-center space-x-6 z-50">
+          <Link href="/history" className="text-zinc-400 hover:text-zinc-100 text-sm font-medium transition-colors">
+            History
+          </Link>
+          <button
+            onClick={() => signOut()}
+            className="flex items-center space-x-2 text-zinc-400 hover:text-zinc-100 transition-colors"
+          >
+            <LogOut className="w-5 h-5" />
+            <span className="text-sm font-medium">Sign Out</span>
+          </button>
+        </div>
       )}
 
       {/* Header section transitions up when searching */}
@@ -181,15 +199,28 @@ export default function Home() {
 
           {/* Metrics Footer */}
           {metrics && (
-            <div className="mt-12 pt-8 border-t border-zinc-800/50 flex flex-wrap gap-4">
-              <div className="flex items-center space-x-2 bg-zinc-900 border border-zinc-800 rounded-full px-4 py-2 text-sm text-zinc-400">
-                <BookOpen className="w-4 h-4 text-emerald-400" />
-                <span>{metrics.sources} Sources Synthesized</span>
+            <div className="mt-12 pt-8 border-t border-zinc-800/50 flex flex-wrap gap-4 items-center justify-between">
+              <div className="flex flex-wrap gap-4">
+                <div className="flex items-center space-x-2 bg-zinc-900 border border-zinc-800 rounded-full px-4 py-2 text-sm text-zinc-400">
+                  <BookOpen className="w-4 h-4 text-emerald-400" />
+                  <span>{metrics.sources} Sources Synthesized</span>
+                </div>
+                <div className="flex items-center space-x-2 bg-zinc-900 border border-zinc-800 rounded-full px-4 py-2 text-sm text-zinc-400">
+                  <Database className="w-4 h-4 text-blue-400" />
+                  <span>{metrics.tokens.toLocaleString()} Tokens Processed</span>
+                </div>
+                <div className="flex items-center space-x-2 bg-zinc-900 border border-zinc-800 rounded-full px-4 py-2 text-sm text-zinc-400">
+                  <DollarSign className="w-4 h-4 text-amber-400" />
+                  <span>${(metrics.tokens * 0.0000002).toFixed(4)} Cost</span>
+                </div>
               </div>
-              <div className="flex items-center space-x-2 bg-zinc-900 border border-zinc-800 rounded-full px-4 py-2 text-sm text-zinc-400">
-                <Database className="w-4 h-4 text-blue-400" />
-                <span>{metrics.tokens.toLocaleString()} Tokens Processed</span>
-              </div>
+              <button 
+                onClick={downloadReport}
+                className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-500 text-white rounded-full px-6 py-2 text-sm font-medium transition-colors shadow-lg shadow-blue-500/20"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download .md</span>
+              </button>
             </div>
           )}
         </div>

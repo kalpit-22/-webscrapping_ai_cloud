@@ -25,3 +25,15 @@ async def save_research_log(question: str, report: str, sources_used: int, total
         print(f"💾 Saved log to database for question: {question}")
     except Exception as e:
         print(f"⚠ Failed to save log to database: {e}")
+
+async def get_research_logs(limit: int = 50):
+    """Fetch the most recent research logs from the database."""
+    cursor = logs_collection.find().sort("timestamp", -1).limit(limit)
+    logs = await cursor.to_list(length=limit)
+    
+    # Convert ObjectId and datetime to JSON serializable strings
+    for log in logs:
+        log["_id"] = str(log["_id"])
+        log["timestamp"] = log["timestamp"].isoformat()
+        
+    return logs

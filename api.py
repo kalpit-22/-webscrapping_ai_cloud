@@ -84,3 +84,19 @@ async def api_research(
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok"}
+
+from database import get_research_logs
+
+@app.get("/api/logs")
+async def api_logs(
+    limit: int = 50,
+    api_key: str = Depends(verify_api_key)
+):
+    """
+    Fetch the history of generated research logs from the MongoDB database.
+    """
+    try:
+        logs = await get_research_logs(limit=limit)
+        return {"status": "ok", "logs": logs}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
