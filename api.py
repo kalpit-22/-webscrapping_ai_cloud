@@ -1,10 +1,20 @@
+import os
 import json
 import asyncio
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Depends, HTTPException, Security
+from fastapi.security.api_key import APIKeyQuery
 from fastapi.middleware.cors import CORSMiddleware
 from sse_starlette.sse import EventSourceResponse
 
 from worker import run_research_task, celery_app
+
+API_KEY = os.getenv("BACKEND_API_KEY", "dev-secret-key")
+api_key_query = APIKeyQuery(name="api_key", auto_error=False)
+
+def verify_api_key(api_key: str = Security(api_key_query)):
+    if api_key != API_KEY:
+        raise HTTPException(status_code=403, detail="Could not validate API key")
+    return api_key
 
 app = FastAPI(title="Web Research Agent API")
 
@@ -50,7 +60,10 @@ async def celery_task_generator(task_id: str):
         yield emit({"status": "Error", "error": f"Task ended with unknown state: {task.state}"})
 
 @app.get("/api/research")
-async def api_research(question: str = Query(..., min_length=3)):
+async def api_research(
+    question: str = Query(..., min_length=3),
+    api_key: str = Depends(verify_api_key)
+):
     """
     Endpoint for the frontend to connect via EventSource.
     Yields Server-Sent Events (SSE) detailing the research progress.

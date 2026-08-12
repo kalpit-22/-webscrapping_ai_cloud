@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Search, Loader2, Sparkles, BookOpen, Database, BrainCircuit, ArrowRight } from "lucide-react";
+import { Search, Loader2, Sparkles, BookOpen, Database, BrainCircuit, ArrowRight, LogOut } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
 
 export default function Home() {
   const [query, setQuery] = useState("");
@@ -11,6 +12,7 @@ export default function Home() {
   const [status, setStatus] = useState("");
   const [report, setReport] = useState("");
   const [metrics, setMetrics] = useState<any>(null);
+  const { data: session } = useSession();
   
   const endOfReportRef = useRef<HTMLDivElement>(null);
 
@@ -30,7 +32,8 @@ export default function Home() {
     setMetrics(null);
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
-    const eventSource = new EventSource(`${apiUrl}/api/research?question=${encodeURIComponent(query)}`);
+    const apiKeyParam = session?.backendApiKey ? `&api_key=${encodeURIComponent(session.backendApiKey)}` : "";
+    const eventSource = new EventSource(`${apiUrl}/api/research?question=${encodeURIComponent(query)}${apiKeyParam}`);
 
     eventSource.onmessage = (event) => {
       try {
@@ -68,6 +71,17 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#09090b] text-zinc-50 flex flex-col items-center p-6 sm:p-12 md:p-24 selection:bg-blue-500/30">
       
+      {/* Sign Out Button */}
+      {session && (
+        <button
+          onClick={() => signOut()}
+          className="absolute top-6 right-6 flex items-center space-x-2 text-zinc-400 hover:text-zinc-100 transition-colors"
+        >
+          <LogOut className="w-5 h-5" />
+          <span className="text-sm font-medium">Sign Out</span>
+        </button>
+      )}
+
       {/* Header section transitions up when searching */}
       <div className={`w-full max-w-4xl transition-all duration-700 ease-in-out flex flex-col items-center ${isSearching || report ? "mb-12 mt-0 scale-95" : "my-auto scale-100"}`}>
         
