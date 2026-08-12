@@ -39,6 +39,9 @@ async def celery_task_generator(task_id: str):
     last_message = ""
     last_emit_time = time.time()
     
+    # Emit the task_id immediately so the frontend can store it for cancellation
+    yield emit({"status": "Started", "task_id": task_id})
+    
     while not task.ready():
         # Check task state
         if task.state == 'PROGRESS':
@@ -80,6 +83,20 @@ async def api_research(
     
     # 2. Return the SSE stream that polls the task progress
     return EventSourceResponse(celery_task_generator(task.id))
+
+@app.post("/api/research/{task_id}/stop")
+async def stop_research(
+    task_id: str,
+    api_key: str = Depends(verify_api_key)
+):
+    """
+    Cancel an ongoing research task.
+    """
+    try:
+        celery_app.control.revoke(task_id, terminate=True, signal='SIGKILL')
+        return {"status": "ok", "message": "Task terminated"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/health")
 async def health_check():

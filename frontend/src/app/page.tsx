@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Link from "next/link";
-import { Search, Loader2, Sparkles, BookOpen, Database, BrainCircuit, ArrowRight, LogOut, Download, DollarSign } from "lucide-react";
+import { Search, Loader2, Sparkles, BookOpen, Database, BrainCircuit, ArrowRight, LogOut, Download, DollarSign, XCircle } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 
 export default function Home() {
@@ -13,9 +13,11 @@ export default function Home() {
   const [status, setStatus] = useState("");
   const [report, setReport] = useState("");
   const [metrics, setMetrics] = useState<any>(null);
+  const [taskId, setTaskId] = useState<string | null>(null);
   const { data: session } = useSession();
   
   const endOfReportRef = useRef<HTMLDivElement>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
     if (report && endOfReportRef.current) {
@@ -47,12 +49,15 @@ export default function Home() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
     const apiKeyParam = session?.backendApiKey ? `&api_key=${encodeURIComponent(session.backendApiKey)}` : "";
     const eventSource = new EventSource(`${apiUrl}/api/research?question=${encodeURIComponent(query)}${apiKeyParam}`);
+    eventSourceRef.current = eventSource;
 
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         
-        if (data.status === "Complete") {
+        if (data.status === "Started") {
+          setTaskId(data.task_id);
+        } else if (data.status === "Complete") {
           setStatus("Research complete!");
           setReport(data.report);
           setMetrics({
@@ -81,7 +86,31 @@ export default function Home() {
       setStatus("Connection to agent lost.");
       eventSource.close();
       setIsSearching(false);
+      setTaskId(null);
     };
+  };
+
+  const handleStopRequest = async () => {
+    if (!taskId) return;
+    
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+      const apiKeyParam = session?.backendApiKey ? `?api_key=${encodeURIComponent(session.backendApiKey as string)}` : "";
+      
+      // Call the backend to revoke the task
+      await fetch(`${apiUrl}/api/research/${taskId}/stop${apiKeyParam}`, { method: 'POST' });
+      
+      // Close the EventSource locally
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
+      
+      setStatus("Research cancelled by user.");
+      setIsSearching(false);
+      setTaskId(null);
+    } catch (err) {
+      console.error("Failed to stop request", err);
+    }
   };
 
   return (
@@ -169,9 +198,18 @@ export default function Home() {
                 {status}
               </p>
             </div>
-            <p className="text-zinc-500 text-sm max-w-md">
+            <p className="text-zinc-500 text-sm max-w-md mb-6">
               The agent is autonomously navigating the web. This usually takes 1-2 minutes depending on the complexity of the topic.
             </p>
+            {taskId && (
+              <button
+                onClick={handleStopRequest}
+                className="flex items-center space-x-2 text-zinc-400 hover:text-red-400 transition-all px-5 py-2 rounded-full border border-zinc-800 hover:border-red-900/50 hover:bg-red-900/10 active:scale-95"
+              >
+                <XCircle className="w-4 h-4" />
+                <span className="text-sm font-medium">Stop Request</span>
+              </button>
+            )}
           </div>
         )}
       </div>
