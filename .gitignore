@@ -26,3 +26,10 @@ field_notes.md
 .idea/
 .DS_Store
 Thumbs.db
+
+# Frontend (Node.js & Next.js)
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+.npm/

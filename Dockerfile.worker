@@ -1,0 +1,4 @@
+FROM pradhyumnagentregistry.azurecr.io/agent-web:latest
+
+# Override the FastAPI start command with the Celery Worker command
+CMD ["celery", "-A", "worker.celery_app", "worker", "--loglevel=info", "--concurrency=4"]
