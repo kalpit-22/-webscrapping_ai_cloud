@@ -19,6 +19,8 @@ output/
 *.tmp
 scratch/
 explanation.md
+explaination.md
+files_description.md
 field_notes.md
 
 # IDE and OS settings
