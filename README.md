@@ -1,4 +1,4 @@
-# 🔬 Web Research Agent
+# 🔬 Web Research Agent (Cloud Native Edition)
 
 An autonomous AI research agent powered by the **DeepSeek API** (`deepseek-v4-flash`). 
 
@@ -9,87 +9,96 @@ You give it a research question, and it will:
 4. **Filter** out irrelevant, low-substance, or SEO spam pages.
 5. **Synthesize** a comprehensive, adaptive markdown report using deep reasoning.
 
----
-
-## 🏗 Architecture (The Modules)
-
-Instead of a monolithic script, the agent is broken into 5 dedicated modules orchestrated by `main.py`:
-
-| Module | Role | Description |
-|---|---|---|
-| `planner.py` | **The Brainstormer** | Breaks the main question into 4 targeted, multi-dimensional search queries. |
-| `search.py` | **The Finder** | Uses DuckDuckGo (`ddgs`) to find URLs matching the queries. |
-| `scraper.py` | **The Reader** | Uses `trafilatura` to extract clean article text from HTML (with BeautifulSoup fallback). |
-| `relevance_filter.py` | **The Bouncer** | The fact-checker. Asks the LLM if a page contains substantive, relevant information. |
-| `synthesizer.py` | **The Writer** | The heavy lifter. Uses deep reasoning to synthesize an adaptive, highly structured final report. |
+This project has been massively upgraded into a full-stack, cloud-ready application!
 
 ---
 
-## 🚀 Getting Started
+## ✨ Features
 
-### Prerequisites
-1. **Python 3.12+**
-2. A **DeepSeek API Key**
+- **Full-Stack UI**: A beautiful, modern Next.js frontend built with React, Tailwind CSS, and `lucide-react`.
+- **Authentication**: Secured with `NextAuth.js` credentials login. The API is protected via Backend API Keys.
+- **Asynchronous Cloud Backend**: 
+  - **FastAPI** provides a high-performance SSE (Server-Sent Events) API.
+  - **Celery & Redis** handle long-running, concurrent web scraping tasks asynchronously.
+- **Persistent Database**: Research logs and metadata are stored in a **MongoDB** database.
+- **History Dashboard**: Browse past research tasks, complete with sources used, token metrics, and expandable report drops.
+- **Real-Time Cost Tracking**: The UI estimates the exact API cost for every search (calculated based on DeepSeek's $0.20 per 1M token blended rate).
+- **Downloadable Reports**: Instantly download any finished research report as a `.md` markdown file to your local machine.
+- **Task Cancellation**: A convenient "Stop Request" button lets you forcefully terminate any active research task running in the cloud.
 
-### 1. Install Dependencies
+---
+
+## 🏗 Architecture (The Stack)
+
+- **Frontend**: Next.js 14 (App Router), React, Tailwind, NextAuth.js
+- **API Proxy**: FastAPI, Python 3.12
+- **Worker/Queue**: Celery, Redis
+- **Database**: MongoDB (Motor async driver)
+- **AI/Scraping Core**: OpenAI SDK, `trafilatura`, `BeautifulSoup4`, `ddgs`
+
+---
+
+## 🚀 Getting Started Locally
+
+### 1. Backend Setup (Python)
+Ensure you have Redis and MongoDB running locally, then:
 ```bash
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. Configure Environment
-Create a `.env` file in the root directory and add your DeepSeek API key:
+Create a `.env` file in the root directory:
 ```env
 DEEPSEEK_API_KEY=your_api_key_here
+BACKEND_API_KEY=dev-secret-key
+REDIS_URL=redis://localhost:6379/0
+MONGODB_URI=mongodb://localhost:27017
 ```
 
-### 3. Run a Research Task
-Run the orchestrator script with your research question:
-
-```powershell
-python main.py "What are the latest breakthroughs in AI agent architectures?"
+Start the Celery Worker:
+```bash
+celery -A worker.celery_app worker --loglevel=info -P solo
 ```
 
-The agent will print its progress to the console (including total token usage) and save the final Markdown report to the `output/` directory.
+Start the FastAPI Server (in a separate terminal):
+```bash
+uvicorn api:app --reload --port 8000
+```
+
+### 2. Frontend Setup (Node.js)
+```bash
+cd frontend
+npm install
+```
+
+Create a `frontend/.env.local` file:
+```env
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=super-secret-key-123
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+BACKEND_API_KEY=dev-secret-key
+```
+
+Start the Next.js Dev Server:
+```bash
+npm run dev
+```
+
+Visit `http://localhost:3000` to log in (Default Username: `testuser`, Password: `password123`) and start researching!
 
 ---
 
-## 🧠 DeepSeek Reasoning & Adaptive Prompts
+## ☁️ Azure Container Apps Deployment
 
-This agent heavily utilizes DeepSeek's massive context and reasoning capabilities:
+This application is designed to be deployed using a microservices architecture on **Azure Container Apps**. It runs 3 containers inside a secure VNet environment:
+1. **Frontend App**: Next.js Node container (Public Ingress)
+2. **FastAPI & Celery App**: Python container (Internal TCP Ingress)
+3. **Mongo DB & Redis**: Managed services or sidecar containers.
 
-- **Adaptive Synthesis**: The Synthesizer evaluates the complexity of your question first. If you ask for a recipe, it writes a simple, concise guide. If you ask for market analysis, it generates an executive briefing with deep-dives and markdown tables.
-- **Deep Reasoning**: DeepSeek's native reasoning phase allows it to plan complex search strategies and evaluate conflicting sources seamlessly. Token limits are tuned (`MAX_TOKENS = 8192`) to accommodate massive context parsing.
-
----
-
-## 🛡️ Data Quality & Grounding
-
-To prevent hallucinations and outdated information, the agent employs strict data quality mechanisms:
-
-1. **Substantive Filtering**: The Relevance Filter strictly rejects SEO spam, video descriptions without text, 404 pages, and passing mentions.
-2. **Strict Citations**: The Synthesizer is forced to cite its claims using inline brackets (e.g., `[1]`) and is required to append a full **References** bibliography mapping those numbers to their source URLs at the bottom of the report, making every claim instantly verifiable.
+*Refer to the deployment documentation for CI/CD GitHub Actions setup.*
 
 ---
-
-## 📂 Project Structure
-
-```text
-Researcher_agent/
-│
-├── config.py             # Shared settings, token tracking, and LLM client
-├── main.py               # The Orchestrator
-├── planner.py            # Query generation module
-├── relevance_filter.py   # Page relevance evaluation module
-├── scraper.py            # HTML extraction module
-├── search.py             # DuckDuckGo search module
-│
-├── requirements.txt      # Python dependencies
-├── .env                  # API keys
-│
-└── output/               # Generated research reports (.md)
-```
 
 ## 📝 License
 MIT
