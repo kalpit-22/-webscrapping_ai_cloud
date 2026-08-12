@@ -16,6 +16,7 @@ from datetime import datetime
 sys.stdout.reconfigure(encoding='utf-8')
 
 from config import OUTPUT_DIR
+import config
 from planner import generate_queries
 from search import search
 from scraper import scrape_urls
@@ -83,31 +84,16 @@ def run_research(question: str) -> str:
     # ── Step 5: Synthesize report ────────────────────────────────
     print("─" * 40)
     print(f"📝 Step 5: Synthesizing report from {len(relevant)} sources...")
-    print("   (using /think for deep reasoning — this may take a minute)")
     print("─" * 40)
     report = synthesize(question, relevant)
     
     elapsed = time.perf_counter() - start_time
     
-    # Calculate token stats
-    from config import llm_metrics
-    total_tokens = llm_metrics.total_prompt_tokens + llm_metrics.total_completion_tokens
-    cache_hit_rate = (llm_metrics.total_cached_tokens / llm_metrics.total_prompt_tokens * 100) if llm_metrics.total_prompt_tokens > 0 else 0
-    
-    last_step_tokens = llm_metrics.last_prompt_tokens + llm_metrics.last_completion_tokens
-    last_cache_hit_rate = (llm_metrics.last_cached_tokens / llm_metrics.last_prompt_tokens * 100) if llm_metrics.last_prompt_tokens > 0 else 0
-    
     print(f"\n{'=' * 60}")
     print(f"✅ Research complete in {elapsed:.1f} seconds")
     print(f"   Sources used: {len(relevant)}")
     print(f"   Report length: {len(report)} chars")
-    print(f"   LLM Total Time: {llm_metrics.total_time_seconds:.1f}s")
-    print(f"   Tokens Total: {total_tokens:,} (Prompt: {llm_metrics.total_prompt_tokens:,} | Completion: {llm_metrics.total_completion_tokens:,})")
-    print(f"   Cache Hits Total: {llm_metrics.total_cached_tokens:,} ({cache_hit_rate:.1f}%)\n")
-    print(f"   [Synthesizer Step Only]")
-    print(f"   LLM Time: {llm_metrics.last_time_seconds:.1f}s")
-    print(f"   Tokens: {last_step_tokens:,} (Prompt: {llm_metrics.last_prompt_tokens:,} | Completion: {llm_metrics.last_completion_tokens:,})")
-    print(f"   Cache Hits: {llm_metrics.last_cached_tokens:,} ({last_cache_hit_rate:.1f}%)")
+    print(f"   Total tokens used: {config.TOTAL_TOKENS_USED}")
     print(f"{'=' * 60}\n")
     
     return report
@@ -148,8 +134,8 @@ if __name__ == "__main__":
     
     if report:
         # Print the report
-        print(report)
-        print()
+        # print(report)
+        # print()
         
         # Save to file
         filepath = save_report(question, report)

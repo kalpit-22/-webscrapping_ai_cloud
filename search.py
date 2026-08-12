@@ -2,7 +2,7 @@
 search.py — DuckDuckGo Search Module
 
 Takes a search query and returns top URLs + snippets.
-Uses the duckduckgo-search library for web search.
+Uses the ddgs library for web search.
 
 Usage:
     python search.py "latest AI agent architectures"

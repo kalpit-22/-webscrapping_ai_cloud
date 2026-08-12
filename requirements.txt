@@ -1,5 +1,5 @@
 # Web Search & Scraping
-duckduckgo-search>=4.0.0
+ddgs
 trafilatura>=2.2.0
 
 # HTTP & HTML Parsing (trafilatura dependencies & general usage)

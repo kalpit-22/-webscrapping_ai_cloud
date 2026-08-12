@@ -4,9 +4,6 @@ synthesizer.py — Report Generator Module
 Takes all approved scraped text and writes a comprehensive,
 well-formatted research report answering the original question.
 
-This module uses /think to enable the model's reasoning mode,
-since report synthesis benefits from deep thinking.
-
 Usage:
     python synthesizer.py
 """
@@ -19,22 +16,24 @@ from scraper import ScrapedPage
 sys.stdout.reconfigure(encoding='utf-8')
 
 
-SYNTHESIZER_PROMPT = """You are a senior research analyst. Using ONLY the source material provided below, write a comprehensive, well-structured research report that answers the following question.
+SYNTHESIZER_PROMPT = """You are an expert research analyst. Your task is to write a report answering the research question using ONLY the provided source material.
 
 Research Question: {question}
 
 Source Material:
 {sources}
 
-Instructions:
-- Write a detailed, well-organized report with clear sections and headings
-- Use markdown formatting (headers, bold, bullet points, etc.)
-- Cite which source each key finding comes from using inline brackets (e.g., [1], [2])
-- Include a brief summary/conclusion at the end
-- ONLY use information from the provided sources — do NOT make up facts
-- If the sources don't fully answer the question, acknowledge the gaps
-- VERY IMPORTANT: You must include a "References" section at the very end of the report that lists every source used, along with its full URL provided in the source material block.
-/think"""
+Formatting & Structural Guidelines:
+1. ADAPTIVE FORMATTING: First, analyze the nature of the Research Question. 
+   - If it is a practical, everyday question (like a recipe, a quick how-to, or a simple fact), write a clear, concise, and straightforward guide. Keep it simple and accessible.
+   - If it is a complex, technical, or professional topic (like "latest AI architectures" or "market analysis"), write a highly structured, executive-level briefing with an Executive Summary, Deep-Dive Sections, and Markdown Tables.
+2. Tone: Match the tone to the subject matter (friendly/accessible for casual topics, objective/academic for professional topics).
+3. Synthesis: Combine insights from multiple sources. Highlight consensus and point out any conflicting information between sources.
+4. Citations: Every factual claim or specific instruction MUST be cited inline using brackets (e.g., [1], [2]). 
+5. References: You MUST include a final "References" section listing every source used, along with its full URL provided in the source block.
+
+Constraint Checklist:
+- ONLY use information from the provided sources. Do not hallucinate external facts."""
 
 
 def _format_sources(pages: list[ScrapedPage]) -> str:
@@ -105,7 +104,6 @@ if __name__ == "__main__":
     
     question = "What are the latest breakthroughs in AI agent architectures?"
     print(f"📝 Synthesizing report for: \"{question}\"\n")
-    print("(This may take a minute — using /think for deep reasoning...)\n")
     
     report = synthesize(question, test_pages)
-    print(report)
+    # print(report)

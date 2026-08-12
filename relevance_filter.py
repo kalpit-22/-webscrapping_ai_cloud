@@ -16,7 +16,7 @@ from scraper import ScrapedPage
 sys.stdout.reconfigure(encoding='utf-8')
 
 
-RELEVANCE_PROMPT = """You are a strict relevance judge. Determine if the following web page content is relevant to answering the research question.
+RELEVANCE_PROMPT = """You are an expert fact-checker and relevance judge. Your job is to determine if the following web page content contains substantive information that helps answer the research question.
 
 Research Question: {question}
 
@@ -26,14 +26,13 @@ Web Page Content (first 1500 chars):
 {text}
 ---
 
-Rules for relevance:
-1. The page must actually contain information that helps answer the question.
-2. If the question implies recency (e.g., using words like "latest", "new", "2024", "current"), you MUST REJECT pages that appear to be outdated or discuss old versions of the topic.
-3. If the page is just a generic marketing page, navigation menu, or irrelevant article, reject it.
+Evaluation Criteria:
+1. Substantive Content: The page must contain actual facts, data, or instructions related to the question, not just passing mentions.
+2. Quality over Quantity: Reject SEO spam, generic marketing pages, login screens, or paywall blockers.
+3. Temporal Relevance: If the question implies recency (e.g., "latest", "2024"), strictly reject outdated content.
 
-Is this page relevant and up-to-date enough to answer the research question?
-Reply with EXACTLY one word: YES or NO
-/no_think"""
+Is this page relevant and high-quality enough to be included in a professional research report?
+Reply with EXACTLY one word: YES or NO. Do not include any other text."""
 
 
 def check_relevance(page: ScrapedPage, question: str) -> bool:
@@ -58,7 +57,7 @@ def check_relevance(page: ScrapedPage, question: str) -> bool:
         )}
     ]
     
-    response = llm_chat(messages, max_tokens=16, temperature=0.1)
+    response = llm_chat(messages, max_tokens=1024, temperature=0.1)
     
     # Check if the response contains YES
     return "YES" in response.upper()

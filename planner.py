@@ -18,20 +18,21 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 import datetime
 
-PLANNER_PROMPT = """You are a research assistant. Your job is to break down a research question into specific search queries for DuckDuckGo.
+PLANNER_PROMPT = """You are an expert research strategist. Your task is to break down a complex research question into exactly 4 highly targeted DuckDuckGo search queries. 
 
-Given the following research question, generate exactly 4 focused search queries that would help find comprehensive information to answer it. Each query should target a different aspect of the question.
+To ensure a comprehensive investigation, your queries should explore different dimensions of the topic, such as:
+1. Core definition, primary facts, or main ingredients
+2. Expert opinions, analysis, or step-by-step methods
+3. Recent developments or news (append {current_year} if recency is implied)
+4. Alternative perspectives, variations, or edge cases
 
 Rules:
-- Output ONLY the queries, one per line
+- Output ONLY the 4 queries, one per line
 - Number them 1. 2. 3. 4.
-- Keep each query concise (3-8 words)
-- Make them specific enough to return relevant results
-- If the question implies recency (e.g., "latest", "newest", "current"), append the current year ({current_year}) to the queries to ensure up-to-date results.
-- Do NOT include any explanation or commentary
+- Use precise, high-signal keywords (3-8 words per query)
+- Do NOT include any explanation, conversational filler, or formatting other than the numbered list.
 
-Research Question: {question}
-/no_think"""
+Research Question: {question}"""
 
 
 def generate_queries(question: str) -> list[str]:
@@ -51,7 +52,7 @@ def generate_queries(question: str) -> list[str]:
         )}
     ]
     
-    response = llm_chat(messages, max_tokens=256, temperature=0.3)
+    response = llm_chat(messages, max_tokens=2048, temperature=0.3)
     
     # Parse numbered queries from the response
     queries = []
