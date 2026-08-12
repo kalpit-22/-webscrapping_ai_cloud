@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Output reports
+output/
+!output/.gitkeep
+
+# Logs, personal notes, and temporary files
+*.log
+*.tmp
+scratch/
+explanation.md
+field_notes.md
+
+# IDE and OS settings
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,15 @@
+# Web Search & Scraping
+duckduckgo-search>=4.0.0
+trafilatura>=2.2.0
+
+# HTTP & HTML Parsing (trafilatura dependencies & general usage)
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=5.1.0
+
+# LLM Backend Connection & Structuring
+openai>=1.10.0
+pydantic>=2.6.0
+
+# Utilities
+python-dotenv>=1.0.0
