@@ -133,7 +133,7 @@ export default function Home() {
             <div className="relative flex items-center justify-center mb-6">
               <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl animate-pulse" />
               <div className="relative p-4 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl flex items-center justify-center">
-                {status.toLowerCase().includes("search") ? (
+                {status.toLowerCase().includes("search") || status.toLowerCase().includes("generat") || status.toLowerCase().includes("filter") ? (
                   <Search className="w-8 h-8 text-blue-400 animate-bounce" />
                 ) : status.toLowerCase().includes("scrap") || status.toLowerCase().includes("read") ? (
                   <BookOpen className="w-8 h-8 text-emerald-400 animate-pulse" />
