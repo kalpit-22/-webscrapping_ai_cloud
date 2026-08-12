@@ -126,14 +126,29 @@ export default function Home() {
         </form>
 
         {isSearching && !report && (
-          <div className="mt-12 flex flex-col items-center text-center animate-pulse">
-            <div className="p-4 bg-blue-500/10 rounded-full mb-4">
-              <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+          <div className="mt-12 flex flex-col items-center text-center animate-fade-in-up">
+            <div className="relative flex items-center justify-center mb-6">
+              <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl animate-pulse" />
+              <div className="relative p-4 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl flex items-center justify-center">
+                {status.toLowerCase().includes("search") ? (
+                  <Search className="w-8 h-8 text-blue-400 animate-bounce" />
+                ) : status.toLowerCase().includes("scrap") || status.toLowerCase().includes("read") ? (
+                  <BookOpen className="w-8 h-8 text-emerald-400 animate-pulse" />
+                ) : status.toLowerCase().includes("synth") || status.toLowerCase().includes("think") ? (
+                  <BrainCircuit className="w-8 h-8 text-purple-400 animate-pulse" />
+                ) : (
+                  <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+                )}
+              </div>
             </div>
-            <p className="text-xl text-blue-400 font-medium tracking-wide">
-              {status}
-            </p>
-            <p className="text-zinc-500 mt-2 text-sm max-w-md">
+            
+            <div className="flex items-center space-x-3 mb-2">
+              <Loader2 className="w-4 h-4 text-zinc-400 animate-spin" />
+              <p className="text-xl text-zinc-200 font-medium tracking-wide">
+                {status}
+              </p>
+            </div>
+            <p className="text-zinc-500 text-sm max-w-md">
               The agent is autonomously navigating the web. This usually takes 1-2 minutes depending on the complexity of the topic.
             </p>
           </div>
