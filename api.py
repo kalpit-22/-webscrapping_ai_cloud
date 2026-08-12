@@ -1,6 +1,7 @@
 import os
 import json
 import asyncio
+import time
 from fastapi import FastAPI, Query, Depends, HTTPException, Security
 from fastapi.security.api_key import APIKeyQuery
 from fastapi.middleware.cors import CORSMiddleware
@@ -36,6 +37,7 @@ async def celery_task_generator(task_id: str):
         
     task = celery_app.AsyncResult(task_id)
     last_message = ""
+    last_emit_time = time.time()
     
     while not task.ready():
         # Check task state
@@ -45,6 +47,11 @@ async def celery_task_generator(task_id: str):
             if current_message != last_message:
                 yield emit(task.info)
                 last_message = current_message
+                last_emit_time = time.time()
+            elif time.time() - last_emit_time > 15:
+                # Send a keep-alive ping to prevent Azure load balancer from dropping the connection
+                yield emit({"status": "Heartbeat", "message": current_message})
+                last_emit_time = time.time()
         
         # Sleep briefly before polling again to avoid spamming Redis
         await asyncio.sleep(0.5)

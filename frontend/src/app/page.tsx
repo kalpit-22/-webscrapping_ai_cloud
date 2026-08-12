@@ -52,8 +52,11 @@ export default function Home() {
           setStatus(`Error: ${data.error}`);
           eventSource.close();
           setIsSearching(false);
+        } else if (data.status === "Heartbeat") {
+          // Ignore keep-alive heartbeats
         } else {
-          setStatus(data.status);
+          // Normal progress update: worker sends {"message": "..."}
+          setStatus(data.status || data.message || "Working...");
         }
       } catch (err) {
         console.error("Failed to parse SSE message", err);
