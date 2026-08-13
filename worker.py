@@ -1,5 +1,6 @@
 import os
 import asyncio
+import ssl
 from celery import Celery
 
 import config
@@ -11,6 +12,13 @@ from synthesizer import synthesize
 from database import save_research_log
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+
+broker_use_ssl = None
+redis_backend_use_ssl = None
+
+if REDIS_URL.startswith("rediss://"):
+    broker_use_ssl = {'ssl_cert_reqs': ssl.CERT_NONE}
+    redis_backend_use_ssl = {'ssl_cert_reqs': ssl.CERT_NONE}
 
 # Initialize Celery
 celery_app = Celery(
@@ -26,6 +34,8 @@ celery_app.conf.update(
     result_serializer='json',
     timezone='UTC',
     enable_utc=True,
+    broker_use_ssl=broker_use_ssl,
+    redis_backend_use_ssl=redis_backend_use_ssl
 )
 
 @celery_app.task(bind=True)
