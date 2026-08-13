@@ -1,10 +1,11 @@
 import os
 import datetime
+import certifi
 from motor.motor_asyncio import AsyncIOMotorClient
 
 # Fallback to local MongoDB if not provided (useful for local dev)
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-client = AsyncIOMotorClient(MONGO_URI)
+client = AsyncIOMotorClient(MONGO_URI, tlsCAFile=certifi.where())
 
 # Database and Collection
 db = client.research_agent
