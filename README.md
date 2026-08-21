@@ -1,78 +1,77 @@
-# 🔬 Web Research Agent (Cloud Native Edition)
+# Web Research Agent
 
-An autonomous AI research agent powered by the **DeepSeek API** (`deepseek-v4-flash`). 
+An autonomous web research assistant powered by the DeepSeek API. It takes a research question, plans multi-angle search queries, scrapes and filters relevant web pages, and synthesizes structured markdown reports with inline citations and full source references.
 
-You give it a research question, and it will:
-1. **Plan** 4 targeted, multi-dimensional search queries.
-2. **Search** DuckDuckGo for the best sources.
-3. **Scrape** the URLs to extract clean text.
-4. **Filter** out irrelevant, low-substance, or SEO spam pages.
-5. **Synthesize** a comprehensive, adaptive markdown report using deep reasoning.
-
-This project has been massively upgraded into a full-stack, cloud-ready application!
+The system is built as a cloud-ready, full-stack application featuring an asynchronous Celery background queue, real-time status streaming over SSE, database persistence in MongoDB, and a Next.js web dashboard.
 
 ---
 
-## ✨ Features
+## How It Works
 
-- **Full-Stack UI**: A beautiful, modern Next.js frontend built with React, Tailwind CSS, and `lucide-react`.
-- **Authentication**: Secured with `NextAuth.js` credentials login. The API is protected via Backend API Keys.
-- **Asynchronous Cloud Backend**: 
-  - **FastAPI** provides a high-performance SSE (Server-Sent Events) API.
-  - **Celery & Redis** handle long-running, concurrent web scraping tasks asynchronously.
-- **Persistent Database**: Research logs and metadata are stored in a **MongoDB** database.
-- **History Dashboard**: Browse past research tasks, complete with sources used, token metrics, and expandable report drops.
-- **Real-Time Cost Tracking**: The UI estimates the exact API cost for every search (calculated based on DeepSeek's $0.20 per 1M token blended rate).
-- **Downloadable Reports**: Instantly download any finished research report as a `.md` markdown file to your local machine.
-- **Task Cancellation**: A convenient "Stop Request" button lets you forcefully terminate any active research task running in the cloud.
+1. **Query Planning**: The agent breaks the user's research topic into up to 4 targeted, multi-dimensional search queries to cover definitions, recent updates, expert analysis, and edge cases.
+2. **Web Search**: Executes queries on DuckDuckGo using `ddgs`, collecting candidate URLs, titles, and snippets while deduplicating links across queries.
+3. **Scraping & Extraction**: Downloads page HTML using `requests` and extracts clean text using `trafilatura` (with a `BeautifulSoup4` fallback). Content is truncated to keep within LLM context limits.
+4. **Relevance Filtering**: An LLM-based relevance check evaluates extracted text against the original question, filtering out SEO spam, login walls, thin content, and off-topic pages.
+5. **Report Synthesis**: Generates an adaptive markdown report using only the verified sources, adding inline citations (e.g. `[1]`, `[2]`) and listing all referenced URLs in a dedicated section at the end.
 
 ---
 
-## 🏗 Architecture (The Stack)
+## Key Features
 
-- **Frontend**: Next.js 14 (App Router), React, Tailwind, NextAuth.js
-- **API Proxy**: FastAPI, Python 3.12
-- **Worker/Queue**: Celery, Redis
-- **Database**: MongoDB (Motor async driver)
-- **AI/Scraping Core**: OpenAI SDK, `trafilatura`, `BeautifulSoup4`, `ddgs`
+- **CLI & Web Interface**: Run research tasks directly from the terminal or through the web UI.
+- **Asynchronous Processing**: Uses Celery and Redis to handle long-running web scraping and synthesis workflows without blocking the API.
+- **Real-Time Progress Streaming**: Streams live status updates and step completions to the browser using Server-Sent Events (SSE).
+- **Task Control**: Cancel active research jobs mid-execution from the UI.
+- **History & Logging**: Stores past research reports, source counts, and token usage metrics in MongoDB, accessible via a history view.
+- **Token & Cost Tracking**: Tracks token consumption per query and estimates API costs.
+- **Downloadable Reports**: Download any generated report directly as a `.md` markdown file.
+- **Authentication & Security**: Protected by NextAuth credentials login on the frontend and API key authentication on backend endpoints.
 
 ---
 
-## 🚀 Getting Started Locally
+## Tech Stack
 
-### 1. Backend Setup (Python)
-Ensure you have Redis and MongoDB running locally, then:
-```bash
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-```
+- **Frontend**: Next.js (App Router), React, Tailwind CSS, NextAuth.js
+- **Backend API**: FastAPI, Python 3.12, SSE Starlette
+- **Worker & Queue**: Celery, Redis
+- **Database**: MongoDB (Async Motor driver)
+- **Scraping & Search**: Trafilatura, BeautifulSoup4, DuckDuckGo Search (`ddgs`), Requests
+- **LLM Integration**: DeepSeek API via OpenAI Python SDK (`deepseek-v4-flash` model)
+
+---
+
+## Repository Structure
+
+- [api.py](file:///Users/pradhyumn/Projects/Webscrapper/-webscrapping_ai_cloud/api.py) - FastAPI server handling SSE streaming, task cancellation, health checks, and log fetching.
+- [worker.py](file:///Users/pradhyumn/Projects/Webscrapper/-webscrapping_ai_cloud/worker.py) - Celery background task orchestrating the research pipeline.
+- [planner.py](file:///Users/pradhyumn/Projects/Webscrapper/-webscrapping_ai_cloud/planner.py) - Decomposes research questions into targeted search queries.
+- [search.py](file:///Users/pradhyumn/Projects/Webscrapper/-webscrapping_ai_cloud/search.py) - DuckDuckGo search integration and URL deduplication.
+- [scraper.py](file:///Users/pradhyumn/Projects/Webscrapper/-webscrapping_ai_cloud/scraper.py) - Page fetcher and text extractor using Trafilatura and BeautifulSoup.
+- [relevance_filter.py](file:///Users/pradhyumn/Projects/Webscrapper/-webscrapping_ai_cloud/relevance_filter.py) - LLM relevance filter for screening scraped pages.
+- [synthesizer.py](file:///Users/pradhyumn/Projects/Webscrapper/-webscrapping_ai_cloud/synthesizer.py) - Report generator enforcing citation rules and structured markdown output.
+- [database.py](file:///Users/pradhyumn/Projects/Webscrapper/-webscrapping_ai_cloud/database.py) - MongoDB driver for saving and reading research logs.
+- [config.py](file:///Users/pradhyumn/Projects/Webscrapper/-webscrapping_ai_cloud/config.py) - Shared environment configuration, model settings, and LLM client initialization.
+- [main.py](file:///Users/pradhyumn/Projects/Webscrapper/-webscrapping_ai_cloud/main.py) - Standalone CLI runner.
+- [docker-compose.yml](file:///Users/pradhyumn/Projects/Webscrapper/-webscrapping_ai_cloud/docker-compose.yml) - Local container orchestration setup for Redis, MongoDB, API, and Worker.
+- [frontend/](file:///Users/pradhyumn/Projects/Webscrapper/-webscrapping_ai_cloud/frontend) - Next.js web application.
+
+---
+
+## Environment Variables
 
 Create a `.env` file in the root directory:
+
 ```env
-DEEPSEEK_API_KEY=your_api_key_here
+DEEPSEEK_API_KEY=your_deepseek_api_key
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-v4-flash
 BACKEND_API_KEY=dev-secret-key
 REDIS_URL=redis://localhost:6379/0
-MONGODB_URI=mongodb://localhost:27017
+MONGO_URI=mongodb://localhost:27017
 ```
 
-Start the Celery Worker:
-```bash
-celery -A worker.celery_app worker --loglevel=info -P solo
-```
+Create a `frontend/.env.local` file for the web UI:
 
-Start the FastAPI Server (in a separate terminal):
-```bash
-uvicorn api:app --reload --port 8000
-```
-
-### 2. Frontend Setup (Node.js)
-```bash
-cd frontend
-npm install
-```
-
-Create a `frontend/.env.local` file:
 ```env
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=super-secret-key-123
@@ -80,25 +79,72 @@ NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 BACKEND_API_KEY=dev-secret-key
 ```
 
-Start the Next.js Dev Server:
+---
+
+## Getting Started
+
+### Local Development
+
+1. **Install Python dependencies**:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+
+2. **Ensure Redis and MongoDB are running** locally on ports `6379` and `27017`.
+
+3. **Start the Celery worker**:
+   ```bash
+   celery -A worker.celery_app worker --loglevel=info
+   ```
+   *(On Windows, add `-P solo` if running outside WSL)*
+
+4. **Start the FastAPI backend server**:
+   ```bash
+   uvicorn api:app --reload --port 8000
+   ```
+
+5. **Start the Frontend development server**:
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+
+   Open `http://localhost:3000` in your browser. Default login credentials: `testuser` / `password123`.
+
+### CLI Usage
+
+To execute a research task from the terminal without the web backend or queue:
+
 ```bash
-npm run dev
+python main.py "What are the latest breakthroughs in AI agent architectures?"
 ```
 
-Visit `http://localhost:3000` to log in (Default Username: `testuser`, Password: `password123`) and start researching!
+Reports are automatically saved in the `output/` directory.
+
+### Running with Docker Compose
+
+To start Redis, MongoDB, the FastAPI backend, and the Celery worker using Docker:
+
+```bash
+docker-compose up --build
+```
 
 ---
 
-## ☁️ Azure Container Apps Deployment
+## API Endpoints
 
-This application is designed to be deployed using a microservices architecture on **Azure Container Apps**. It runs 3 containers inside a secure VNet environment:
-1. **Frontend App**: Next.js Node container (Public Ingress)
-2. **FastAPI & Celery App**: Python container (Internal TCP Ingress)
-3. **Mongo DB & Redis**: Managed services or sidecar containers.
+- `GET /api/research` - Initiates a research task and streams progress updates via Server-Sent Events (SSE). Requires `question` query parameter.
+- `POST /api/research/{task_id}/stop` - Cancels an active Celery task by ID.
+- `GET /api/logs` - Retrieves past research reports, timestamps, and metrics from MongoDB.
+- `GET /api/health` - Basic health check endpoint.
 
-*Refer to the deployment documentation for CI/CD GitHub Actions setup.*
+All protected endpoints require the `api_key` query parameter or header matching `BACKEND_API_KEY`.
 
 ---
 
-## 📝 License
+## License
+
 MIT
